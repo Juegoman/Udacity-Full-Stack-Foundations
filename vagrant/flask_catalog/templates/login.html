@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js">
+    </script>
+    <script src="https://apis.google.com/js/client:platform.js?onload=start" async defer>
+    </script>
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='styles.css')}}">
+    <title>Flask Final Project</title>
+  </head>
+  <body>
+    <header class="row">
+      <div class="col-1"></div>
+      <div class="col-6">
+        <a href="{{url_for('showRestaurants')}}">Return to restaurant listing</a>
+      </div>
+      <div class="col-4 justify-right">
+        {% if 'username' not in session %}
+        <a href="{{url_for('showLogin')}}">Click here to login</a>
+        {% else %}
+        <a href="{{url_for('disconnect')}}">Logout {{session['username']}}</a>
+        {% endif %}
+      </div>
+      <div class="col-1"></div>
+
+      <div class="flash">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+        <ul>
+          {% for message in messages %}
+          <li><strong>{{message}}</strong></li>
+          {% endfor %}
+        </ul>
+        {% endif %}
+        {% endwith %}
+      </div>
+    </header>
+
+    <div class="content-margin centered">
+      <div id="signinButton">
+        <span class="g-signin"
+          data-scope="openid email"
+          data-clientid="376599736937-t8bf5njjn9pt7gjagd01ij5f41jfn42p.apps.googleusercontent.com"
+          data-redirecturi="postmessage"
+          data-accesstype="offline"
+          data-cookiepolicy="single_host_origin"
+          data-callback="signInCallback"
+          data-approvalprompt="force">
+        </span>
+      </div>
+
+      <button class="fblogin">
+        <fb:login-button scope="public_profile,email" onlogin="sendTokenToServer();">
+          <a href="javascript:sendTokenToServer()">Login with Facebook</a>
+        </fb:login-button>
+      </button>
+
+      <div id="result"></div>
+    </div>
+    <script>
+      //facebook login sdk code
+      window.fbAsyncInit = function() {
+        FB.init({
+          appId: '659935354170644',
+          cookie: true,
+          xfbml: true,
+          version: 'v2.2'
+        });
+      };
+
+      (function(d, s, id) {
+        var js, fjs = d.getElementsByTagName(s)[0];
+        if (d.getElementById(id)) return;
+        js = d.createElement(s); js.id = id;
+        js.src = "//connect.facebook.net/en_US/sdk.js";
+        fjs.parentNode.insertBefore(js, fjs);
+      }(document, 'script', 'facebook-jssdk'));
+      //facebook login code to ajax login request to server
+      function sendTokenToServer() {
+        //get the access token from Facebook
+        var access_token = FB.getAuthResponse()['accessToken'];
+        console.log('Fetching access token... ');
+        console.log(access_token);
+        FB.api('/me', function(response) {
+          console.log('login success: ' + response.name);
+          //send the ajax request to the server
+          $.ajax({
+            type: 'POST',
+            url: '/fbconnect?state={{STATE}}',
+            processData: false,
+            data: access_token,
+            contentType: 'application/octet-stream; charset=utf-8',
+            success: function(result) {
+              if (result) {
+                //login successful, redirect to root.
+                $('#result').html('Login Successful!<br>' + result + '<br>Redirecting...');
+                setTimeout(function() {
+                  window.location.href = "/restaurants";
+                }, 4000);
+              } else {
+                $('#result').html('Failed to make a server call. Check your configuration and console.');
+              }
+            }
+          });
+        });
+      }
+
+      function signInCallback(authResult) {
+        if (authResult['code']) {
+          //hide the signin button
+          $('#signinButton').attr('style', 'display: none');
+          //send the one time code to the server
+          $.ajax({
+            type: 'POST',
+            url: '/gconnect?state={{STATE}}',
+            processData: false,
+            contentType: 'application/octet-stream; charset=utf-8',
+            data: authResult['code'],
+            success: function(result) {
+              if (result) {
+                //login successful, redirect to root.
+                $('#result').html('Login Successful!<br>' + result + '<br>Redirecting...')
+                setTimeout(function() {
+                  window.location.href = "/restaurants";
+                }, 4000);
+              } else if (authResult['error']) {
+                console.log('There was an error: ' + authResult['error']);
+              } else {
+                $('#result').html('Failed to make a server call. Check your configuration and console.');
+              }
+            }
+          })
+        }
+      }
+    </script>
+  </body>
+</html>

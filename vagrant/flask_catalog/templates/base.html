@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<head>
+  <title>Flask Final Project</title>
+  <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='styles.css')}}">
+</head>
+<body>
+  <header class="row">
+    <div class="col-1"></div>
+    <div class="col-6">
+      <a href="{{url_for('showRestaurants')}}">Return to restaurant listing</a>
+    </div>
+    <div class="col-4 justify-right">
+      {% if 'username' not in session %}
+      <a href="{{url_for('showLogin')}}">Click here to login</a>
+      {% else %}
+      <a href="{{url_for('disconnect')}}">Logout {{session['username']}}</a>
+      {% endif %}
+    </div>
+    <div class="col-1"></div>
+
+    <div class="flash">
+      {% with messages = get_flashed_messages() %}
+      {% if messages %}
+      <ul>
+        {% for message in messages %}
+        <li><strong>{{message}}</strong></li>
+        {% endfor %}
+      </ul>
+      {% endif %}
+      {% endwith %}
+    </div>
+  </header>
+
+  <div class="content-margin">
+  {% block content %}
+  {% endblock %}
+  </div>
+</body>

@@ -4,10 +4,13 @@
   <div class="header">
     <a href="{{url_for('showRestaurants')}}">Return to restaurant list</a>
     <h1>{{ restaurant.name }}</h1>
+    <div class="creator">
+      <div class="author">
+        Menu by: {{creator.name}} 
+      </div>
+      <img src="{{creator.picture}}" class="portrait">
+    </div>
   </div>
-  <a href="{{url_for('newMenuItem', restaurant_id=restaurant.id)}}">
-    Create New Item
-  </a>
 
   {% for i in items %}
   <div class="nameAndPrice">
@@ -17,11 +20,6 @@
 
   <div class="description">
     <p>{{i.description}}</p>
-  </div>
-
-  <div class="editdeletepane">
-    <a href="{{url_for('editMenuItem', restaurant_id=restaurant.id, menu_id=i.id)}}">Edit</a>
-    <a href="{{url_for('deleteMenuItem', restaurant_id=restaurant.id, menu_id=i.id)}}">Delete</a>
   </div>
   {% endfor %}
   {% if not items %}
